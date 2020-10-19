@@ -12,6 +12,7 @@
 namespace League\OAuth2\Server;
 
 use Defuse\Crypto\Crypto;
+use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 
 trait CryptTrait
 {
