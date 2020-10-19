@@ -104,7 +104,7 @@ trait CryptTrait
     {
         try {
             return Crypto::decryptWithPassword($encryptedData, $this->encryptionKey);
-        } catch (\Exception $exception) {    
+        } catch (WrongKeyOrModifiedCiphertextException $exception) {    
             // For existing tokens created by earlier versions, keep the code backwards compatible        
             $publicKey = openssl_pkey_get_public($this->publicKey->getKeyPath());
             $publicKeyDetails = @openssl_pkey_get_details($publicKey);
