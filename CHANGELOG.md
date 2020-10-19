@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.1.8 (released 2020-10-19)
+
+Fixed breaking change introduced in 5.1.6.
+
 ## 5.1.5 (released 2017-07-11)
 
 To address feedback from the security release the following two changes have been made:
