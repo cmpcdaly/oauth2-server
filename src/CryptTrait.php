@@ -102,38 +102,39 @@ trait CryptTrait
      */
     protected function decrypt($encryptedData)
     {
-        if ($this->encryptionKey !== null) {
+        try {
             return Crypto::decryptWithPassword($encryptedData, $this->encryptionKey);
-        }
-
-        $publicKey = openssl_pkey_get_public($this->publicKey->getKeyPath());
-        $publicKeyDetails = @openssl_pkey_get_details($publicKey);
-        if ($publicKeyDetails === null) {
-            throw new \LogicException(
-                sprintf('Could not get details of public key: %s', $this->publicKey->getKeyPath())
-            );
-        }
-
-        $chunkSize = ceil($publicKeyDetails['bits'] / 8);
-        $output = '';
-
-        $encryptedData = base64_decode($encryptedData);
-
-        while ($encryptedData) {
-            $chunk = substr($encryptedData, 0, $chunkSize);
-            $encryptedData = substr($encryptedData, $chunkSize);
-            if (openssl_public_decrypt($chunk, $decrypted, $publicKey/*, OPENSSL_PKCS1_OAEP_PADDING*/) === false) {
-                // @codeCoverageIgnoreStart
-                throw new \LogicException('Failed to decrypt data');
-                // @codeCoverageIgnoreEnd
+        } catch (Ex\WrongKeyOrModifiedCiphertextException $exception) {    
+            // For existing tokens created by earlier versions, keep the code backwards compatible        
+            $publicKey = openssl_pkey_get_public($this->publicKey->getKeyPath());
+            $publicKeyDetails = @openssl_pkey_get_details($publicKey);
+            if ($publicKeyDetails === null) {
+                throw new \LogicException(
+                    sprintf('Could not get details of public key: %s', $this->publicKey->getKeyPath())
+                );
             }
-            $output .= $decrypted;
+
+            $chunkSize = ceil($publicKeyDetails['bits'] / 8);
+            $output = '';
+
+            $encryptedData = base64_decode($encryptedData);
+
+            while ($encryptedData) {
+                $chunk = substr($encryptedData, 0, $chunkSize);
+                $encryptedData = substr($encryptedData, $chunkSize);
+                if (openssl_public_decrypt($chunk, $decrypted, $publicKey/*, OPENSSL_PKCS1_OAEP_PADDING*/) === false) {
+                    // @codeCoverageIgnoreStart
+                    throw new \LogicException('Failed to decrypt data');
+                    // @codeCoverageIgnoreEnd
+                }
+                $output .= $decrypted;
+            }
+            openssl_pkey_free($publicKey);
+
+            return $output;
         }
-        openssl_pkey_free($publicKey);
-
-        return $output;
     }
-
+    
     /**
      * Set the encryption key
      *
